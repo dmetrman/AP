@@ -6,7 +6,7 @@ from blueprint import api
 app = Flask(__name__)
 
 with make_server('', 5000, app) as server:
-    app.register_blueprint(api, url_prefix="/api/v1")
+    app.register_blueprint(api, url_prefix="/api/v30")
     server.serve_forever()
 
 # curl -v -XGET http://localhost:5000/api/v1/hello-world-30
