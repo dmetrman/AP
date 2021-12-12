@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, DateTime, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 
-
 Base = declarative_base()
 
 class Car(Base):
@@ -18,10 +17,11 @@ class Car(Base):
 class User(Base):
     __tablename__ = "user"
     id = Column(Integer(), primary_key=True, unique=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    surname = Column(String, nullable=False)
-    username = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
+    name = Column(String)
+    surname = Column(String)
+    username = Column(String, unique=True)
+    password = Column(String)
+    role = Column(String)
 
     def __repr__(self):
         return "<User(name='{}')>" \

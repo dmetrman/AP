@@ -7,6 +7,7 @@ from config import DATABASE_URI
 from validation import OrderSchema
 from sqlalchemy import create_engine
 from models import Order, User, Car
+from user import token_required_user
 
 order = Blueprint('order', __name__)
 bcrypt = Bcrypt()
@@ -17,7 +18,10 @@ session = Session()
 
 
 @order.route('/orders/', methods=['POST'])
-def createOrder():
+@token_required_user
+def createOrder(current_user):
+    if not current_user.role == 'user':
+        return jsonify({'message': 'This is only for users'})
     data = request.get_json(force=True)
     try:
         OrderSchema().load(data)
@@ -31,7 +35,8 @@ def createOrder():
         return Response(status=404, response="car_id doesn't exist")
     session.query(Order).filter_by(beginningDate=data['beginningDate']).first()
     session.query(Order).filter_by(amountOfDays=data['amountOfDays']).first()
-    users = Order(user_id=data['user_id'], car_id=data['car_id'], beginningDate=data['beginningDate'], amountOfDays=data['amountOfDays'])
+    session.query(Order).filter_by(complete=data['complete']).first()
+    users = Order(user_id=data['user_id'], car_id=data['car_id'], beginningDate=data['beginningDate'], amountOfDays=data['amountOfDays'], complete=data['complete'])
     session.add(users)
     session.commit()
     session.close()
@@ -39,7 +44,10 @@ def createOrder():
 
 
 @order.route('/orders/<id>', methods=['GET'])
-def getOrderById(id):
+@token_required_user
+def getOrderById(current_user, id):
+    if not current_user.role == 'worker' or current_user.role == 'admin':
+        return jsonify({'message': 'This is only for workers'})
     id = session.query(Order).filter_by(id=id).first()
     if not id:
         return Response(status=404, response="Id doesn't exist")
@@ -48,7 +56,10 @@ def getOrderById(id):
 
 
 @order.route('/orders', methods=['GET'])
-def getOrders():
+@token_required_user
+def getOrders(current_user):
+    if not current_user.role == 'worker' or current_user.role == 'admin':
+        return jsonify({'message': 'This is only for workers'})
     limbo = session.query(Order)
     quer = [OrderSchema().dump(i) for i in limbo]
     if not quer:
@@ -60,7 +71,10 @@ def getOrders():
 
 
 @order.route('/orders/<id>', methods=['DELETE'])
-def deleteOrder(id):
+@token_required_user
+def deleteOrder(current_user, id):
+    if not current_user.role == 'admin' or current_user.role == 'worker':
+        return jsonify({'message': 'This is only for workers'})
     id = session.query(Order).filter_by(id=id).first()
     if not id:
         return Response(status=404, response="Id doesn't exist")

@@ -1,5 +1,4 @@
 from flask import Flask
-from wsgiref.simple_server import make_server
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,8 +10,6 @@ from user import user
 from car import car
 from order import order
 
-
-from blueprint import api
 
 app = Flask(__name__)
 
@@ -27,12 +24,11 @@ migrate = Migrate(app, db)
 app.register_blueprint(user)
 app.register_blueprint(order)
 app.register_blueprint(car)
-JSONIFY_PRETTYPRINT_REGULAR = False
+
 
 @app.route('/')
 def hello_world():
-    return 'Hello World! - 15'
-
+    return 'Hello World! - 30'
 
 
 if __name__ == '__main__':

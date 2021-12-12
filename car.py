@@ -7,6 +7,7 @@ from config import DATABASE_URI
 from validation import CarSchema
 from sqlalchemy import create_engine
 from models import Car
+from user import token_required_user
 
 car = Blueprint('car', __name__)
 bcrypt = Bcrypt()
@@ -15,8 +16,13 @@ Session = sessionmaker(bind=engine)
 
 session = Session()
 
+
 @car.route('/vehicles/', methods=['POST'])
-def createVehicle():
+@token_required_user
+def createVehicle(current_user):
+    if not current_user.role == 'worker' or current_user.role == 'admin':
+        return jsonify({'message': 'This is only for workers'})
+
     data = request.get_json(force=True)
     try:
         CarSchema().load(data)
@@ -25,7 +31,7 @@ def createVehicle():
     session.query(Car).filter_by(brand=data['brand']).first()
     session.query(Car).filter_by(model=data['model']).first()
     session.query(Car).filter_by(status=data['status']).first()
-    users = Car(brand=data['name'], model=data['model'], status=data['status'])
+    users = Car(brand=data['brand'], model=data['model'], status=data['status'])
     session.add(users)
     session.commit()
     session.close()
@@ -44,7 +50,7 @@ def getVehicleById(id):
 @car.route('/vehicles', methods=['GET'])
 def getVehicles():
     limbo = session.query(Car)
-    quer = [Car().dump(i) for i in limbo]
+    quer = [CarSchema().dump(i) for i in limbo]
     if not quer:
         return {"message": "No vehicles available"}, 404
     res = {}
@@ -54,7 +60,11 @@ def getVehicles():
 
 
 @car.route('/vehicles/<id>', methods=['PUT'])
-def updateVehicle(id):
+@token_required_user
+def updateVehicle(current_user, id):
+    if not current_user.role == 'worker' or current_user.role == 'admin':
+        return jsonify({'message': 'This is only for workers'})
+
     data = request.get_json(force=True)
     try:
         CarSchema().load(data)
@@ -65,14 +75,11 @@ def updateVehicle(id):
         return Response(status=404, response="Id doesn't exist")
     if 'brand' in data.keys():
         session.query(Car).filter_by(brand=data['brand']).first()
-
         car_data.brand = data['brand']
-
 
     if 'model' in data.keys():
         session.query(Car).filter_by(model=data['model']).first()
         car_data.model = data['model']
-
 
     if 'status' in data.keys():
         car_data.status = data['status']
@@ -83,7 +90,10 @@ def updateVehicle(id):
 
 
 @car.route('/vehicles/<id>', methods=['DELETE'])
-def deleteVehicle(id):
+@token_required_user
+def deleteVehicle(current_user, id):
+    if not current_user.role == 'worker' or current_user.role == 'admin':
+        return jsonify({'message': 'This is only for workers'})
     id = session.query(Car).filter_by(id=id).first()
     if not id:
         return Response(status=404, response="Id doesn't exist")
