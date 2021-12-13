@@ -2,6 +2,7 @@ import datetime
 import jwt
 from flask import Blueprint, request, jsonify, Response, make_response
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
 from sqlalchemy.orm import sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -84,11 +85,10 @@ def getUsers():
 
 @user.route('/users/<id>', methods=['PUT'])
 @token_required_user
+@jwt_required()
 def updateUser(current_user, id):
-    if not current_user.role == 'user' or current_user.role == 'admin':
+    if not current_user.role == 'user':
         return jsonify({'message': 'This is only for users'})
-    if 500:
-        return jsonify({'message': 'This is only for workers'})
     data = request.get_json(force=True)
     try:
         UserSchema().load(data)
@@ -97,6 +97,15 @@ def updateUser(current_user, id):
     user_data = session.query(User).filter_by(id=id).first()
     if not user_data:
         return Response(status=404, response="Id doesn't exist")
+
+    current_username = get_jwt_identity()
+    current_user = session.query(User).filter_by(username=current_username).first()
+
+    if id != current_user.id:
+        return 'Access is denied', 403
+
+
+
     if 'name' in data.keys():
         session.query(User).filter_by(name=data['name']).first()
 
