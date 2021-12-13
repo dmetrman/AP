@@ -127,9 +127,7 @@ def updateUser(current_user, id):
 @user.route('/users/<id>', methods=['DELETE'])
 @token_required_user
 def deleteUser(current_user, id):
-    if not current_user.role == 'user' or current_user.role == 'admin':
-        return jsonify({'message': 'This is only for users'})
-    if 500:
+    if not current_user.role == 'worker' or current_user.role == 'admin':
         return jsonify({'message': 'This is only for workers'})
 
     id = session.query(User).filter_by(id=id).first()

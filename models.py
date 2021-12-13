@@ -19,7 +19,7 @@ class User(Base):
     id = Column(Integer(), primary_key=True, unique=True, autoincrement=True)
     name = Column(String)
     surname = Column(String)
-    username = Column(String, unique=True)
+    username = Column(String)
     password = Column(String)
     role = Column(String)
 
